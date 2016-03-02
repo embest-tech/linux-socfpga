@@ -28,6 +28,13 @@
 #define AT803X_MMD_ACCESS_CONTROL_DATA		0x0E
 #define AT803X_FUNC_DATA			0x4003
 
+#define AT803X_DEBUG_PORT_ADDRESS		0x1D
+#define AT803X_DEBUG_PORT_DATA			0x1E
+#define AT803X_DEBUG_TX_CLOCK_CONTROL		0x05
+
+// DEBUG_TX_CLOCK_CONTROL bits
+#define RGMII_TX_CLK_DLY			0x0100
+
 MODULE_DESCRIPTION("Atheros 803x PHY driver");
 MODULE_AUTHOR("Matus Ujhelyi");
 MODULE_LICENSE("GPL");
@@ -99,6 +106,10 @@ static int at803x_config_init(struct phy_device *phydev)
 
 	phydev->supported = features;
 	phydev->advertising = features;
+
+	/* tary, 2016-03-02 */
+	phy_write(phydev, AT803X_DEBUG_PORT_ADDRESS, AT803X_DEBUG_TX_CLOCK_CONTROL);
+	phy_write(phydev, AT803X_DEBUG_PORT_DATA, RGMII_TX_CLK_DLY);
 
 	/* enable WOL */
 	at803x_set_wol_mac_addr(phydev);
