@@ -104,28 +104,6 @@
 			status = "okay";
 		};
 
-		leds {
-			compatible = "gpio-leds";
-			hps0 {
-				label = "hps_led0";
-				gpios = <&gpio1 15 1>;
-			};
-
-			hps1 {
-				label = "hps_led1";
-				gpios = <&gpio1 14 1>;
-			};
-
-			hps2 {
-				label = "hps_led2";
-				gpios = <&gpio1 13 1>;
-			};
-
-			hps3 {
-				label = "hps_led3";
-				gpios = <&gpio1 12 1>;
-			};
-		};
 	};
 };
 
@@ -193,3 +171,103 @@
 		};
 	};
 };
+
+/{
+	soc {
+		leds {
+			compatible = "gpio-leds";
+
+			hps0 {
+				label = "hps_led0";
+				gpios = <&gpio0 0 1>;
+			};
+
+			hps1 {
+				label = "hps_led1";
+				gpios = <&gpio0 9 1>;
+			};
+
+			hps2 {
+				label = "hps_led2";
+				gpios = <&gpio1 20 1>;
+			};
+
+			hps3 {
+				label = "hps_led3";
+				gpios = <&gpio0 28 1>;
+			};
+
+			hps4 {
+				label = "hps_led4";
+				gpios = <&gpio1 3 1>;
+			};
+
+			hps5 {
+				label = "hps_led5";
+				gpios = <&gpio1 2 1>;
+			};
+
+			hps6 {
+				label = "hps_led6";
+				gpios = <&gpio1 19 1>;
+				default-state = "on";
+			};
+
+			#if 0
+			hps7 {
+				label = "hps_led7";
+				gpios = <&gpio1 0 1>;
+			};
+
+			hps8 {
+				label = "hps_led8";
+				gpios = <&gpio1 0 1>;
+			};
+
+			hps9 {
+				label = "hps_led9";
+				gpios = <&gpio1 9 1>;
+			};
+			#endif
+		};
+
+		gpio_keys {
+			compatible = "gpio-keys-polled";
+			#address-cells = <1>;
+			#size-cells = <0>;
+			poll-interval = <50>;
+			/* autorepeat; */
+
+			button@0 {
+				debounce_interval = <50>;
+				wakeup = <1>;
+				linux,code = <0x100>;
+				label = "pb0_s3";
+				gpios = <&gpio2 21 1>;
+			};
+			button@1 {
+				debounce_interval = <50>;
+				wakeup = <1>;
+				linux,code = <0x101>;
+				label = "pb1_s4";
+				gpios = <&gpio2 22 1>;
+			};
+			button@2 {
+				debounce_interval = <50>;
+				wakeup = <1>;
+				linux,code = <0x102>;
+				label = "pb2_s5";
+				gpios = <&gpio2 23 1>;
+			};
+			button@3 {
+				debounce_interval = <50>;
+				wakeup = <1>;
+				linux,code = <0x103>;
+				label = "pb3_s6";
+				gpios = <&gpio2 24 1>;
+			};
+	
+		};
+	};
+};
+
