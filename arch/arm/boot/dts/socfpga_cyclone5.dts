@@ -130,7 +130,7 @@
 	};
 
 	rtc@68 {
-		compatible = "dallas,ds1339";
+		compatible = "dallas,ds3231";
 		reg = <0x68>;
 	};
 };
