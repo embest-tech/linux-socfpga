@@ -279,6 +279,9 @@
 			gpios = <&gpio1 21 0>;
 		};
 
+		mmc: dwmmc0@ff704000 {
+			pwr-en = <0>;
+		};
 	};
 };
 
