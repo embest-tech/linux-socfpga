@@ -14,7 +14,6 @@
  * published by the Free Software Foundation.
  *
  */
-
 #include <linux/init.h>
 #include <linux/err.h>
 #include <linux/errno.h>
@@ -39,7 +38,7 @@
 #define	OPCODE_WREN		0x06	/* Write enable */
 #define	OPCODE_RDSR		0x05	/* Read status register */
 #define	OPCODE_WRSR		0x01	/* Write status register 1 byte */
-#define	OPCODE_RFSR		0x70  /* read flag status register */
+#define	OPCODE_RFSR		0x70	/* read flag status register */
 #define	OPCODE_NORM_READ	0x03	/* Read data bytes (low frequency) */
 #define	OPCODE_FAST_READ	0x0b	/* Read data bytes (high frequency) */
 #define OPCODE_QUAD_READ	0x6b	/* Quad read command */
@@ -131,6 +130,38 @@ static inline struct m25p *mtd_to_m25p(struct mtd_info *mtd)
 
 /****************************************************************************/
 
+
+/* this copies txbuf and rxbuf data; for small transfers only! */
+static int spi_write_and_read(struct spi_device *spi,
+		const void *txbuf, unsigned n_tx,
+		void *rxbuf, unsigned n_rx) {
+	struct spi_transfer	t = {
+		.len = n_tx + n_rx,
+	};
+	struct spi_message	m;
+	char* buf;
+	int r;
+
+	if ((buf = kmalloc(t.len, GFP_KERNEL)) == NULL) {
+		return -ENOMEM;
+	}
+
+	t.tx_buf = t.rx_buf = buf;
+	memcpy(buf, txbuf, n_tx);
+
+	spi_message_init(&m);
+	spi_message_add_tail(&t, &m);
+	if (!(r = spi_sync(spi, &m))) {
+		memcpy(rxbuf, (char*)buf + n_tx, n_rx);
+	}
+
+	kfree(buf);
+	if (!r) {
+		return m.actual_length;
+	}
+	return r;
+}
+
 /*
  * Internal helper functions
  */
@@ -144,7 +175,7 @@ static inline int read_spi_reg(struct m25p *flash, u8 code, const char *name)
 	ssize_t retval;
 	u8 val;
 
-	retval = spi_write_then_read(flash->spi, &code, 1, &val, 1);
+	retval = spi_write_and_read(flash->spi, &code, 1, &val, 1);
 
 	if (retval < 0) {
 		dev_err(&flash->spi->dev, "error %d reading %s\n",
@@ -209,7 +240,7 @@ static int read_vcr(struct m25p *flash)
 	u8 code = OPCODE_RVCR;
 	u8 val;
 
-	retval = spi_write_then_read(flash->spi, &code, 1, &val, 1);
+	retval = spi_write_and_read(flash->spi, &code, 1, &val, 1);
 
 	if (retval < 0) {
 		dev_err(&flash->spi->dev, "error %d reading VCR\n",
@@ -228,7 +259,7 @@ static inline int write_enable(struct m25p *flash)
 {
 	u8	code = OPCODE_WREN;
 
-	return spi_write_then_read(flash->spi, &code, 1, NULL, 0);
+	return spi_write_and_read(flash->spi, &code, 1, NULL, 0);
 }
 
 /*
@@ -238,7 +269,7 @@ static inline int write_disable(struct m25p *flash)
 {
 	u8	code = OPCODE_WRDI;
 
-	return spi_write_then_read(flash->spi, &code, 1, NULL, 0);
+	return spi_write_and_read(flash->spi, &code, 1, NULL, 0);
 }
 
 /*
@@ -275,7 +306,7 @@ static inline int set_4byte(struct m25p *flash, u32 jedec_id, int enable)
 
 		/* verify the 4 byte mode is enabled */
 		flash->command[0] = OPCODE_BRRD;
-		spi_write_then_read(flash->spi, flash->command, 1, &val, 1);
+		spi_write_and_read(flash->spi, flash->command, 1, &val, 1);
 		if (val != enable << 7) {
 			dev_warn(&flash->spi->dev,
 				 "fallback to 3-byte address mode\n");
@@ -554,13 +585,15 @@ static int m25p80_read(struct mtd_info *mtd, loff_t from, size_t len,
 	size_t *retlen, u_char *buf)
 {
 	struct m25p *flash = mtd_to_m25p(mtd);
-	struct spi_transfer t[2];
+	// struct spi_transfer t[2];
 	struct spi_message m;
+	int r;
 
 	pr_debug("%s: %s from 0x%08x, len %zd\n", dev_name(&flash->spi->dev),
 			__func__, (u32)from, len);
 
 	spi_message_init(&m);
+	#if 0
 	memset(t, 0, (sizeof t));
 
 	/* NOTE:
@@ -574,7 +607,7 @@ static int m25p80_read(struct mtd_info *mtd, loff_t from, size_t len,
 	t[1].rx_buf = buf;
 	t[1].len = len;
 	spi_message_add_tail(&t[1], &m);
-
+	#endif
 	/* Wait till previous write/erase is done. */
 	if (flash->wait_till_ready(flash)) {
 		/* REVISIT status return?? */
@@ -589,8 +622,18 @@ static int m25p80_read(struct mtd_info *mtd, loff_t from, size_t len,
 	/* Set up the write data buffer. */
 	flash->command[0] = flash->read_opcode;
 	m25p_addr2cmd(flash, from, flash->command);
-
+	#if 0
 	spi_sync(flash->spi, &m);
+	#else
+	r = spi_write_and_read(flash->spi, flash->command, m25p_cmdsz(flash) + flash->dummycount,
+			buf, len);
+	if (r < 0) {
+		*retlen = 0;
+		return 0;
+	} else {
+		m.actual_length = r;
+	}
+	#endif
 
 	*retlen = m.actual_length - m25p_cmdsz(flash) -
 			flash->dummycount;
@@ -662,6 +705,7 @@ static int m25p80_write(struct mtd_info *mtd, loff_t to, size_t len,
 	u32 page_offset, page_size;
 	struct spi_transfer t[2];
 	struct spi_message m;
+	void* bbuf;
 
 	pr_debug("%s: %s to 0x%08x, len %zd\n", dev_name(&flash->spi->dev),
 			__func__, (u32)to, len);
@@ -669,12 +713,22 @@ static int m25p80_write(struct mtd_info *mtd, loff_t to, size_t len,
 	spi_message_init(&m);
 	memset(t, 0, (sizeof t));
 
+	#if 0
 	t[0].tx_buf = flash->command;
 	t[0].len = m25p_cmdsz(flash);
+	#else
+	t[0].len = m25p_cmdsz(flash) + len;
+	if ((bbuf = kmalloc(t[0].len, GFP_KERNEL)) == NULL) {
+		return 1;
+	}
+	t[0].tx_buf = bbuf;
+	#endif
 	spi_message_add_tail(&t[0], &m);
 
+	/*
 	t[1].tx_buf = buf;
 	spi_message_add_tail(&t[1], &m);
+	*/
 
 	/* Wait until finished previous write command. */
 	if (flash->wait_till_ready(flash))
@@ -689,12 +743,20 @@ static int m25p80_write(struct mtd_info *mtd, loff_t to, size_t len,
 	page_offset = to & (flash->page_size - 1);
 
 	/* do all the bytes fit onto one page? */
-	if (page_offset + len <= flash->page_size) {
+	// if (page_offset + len <= flash->page_size) {
+	if (1) {
+		#if 0
 		t[1].len = len;
+		#else
+		memcpy(bbuf, flash->command, m25p_cmdsz(flash));
+		memcpy(bbuf + m25p_cmdsz(flash), buf, len);
+		#endif
 
 		spi_sync(flash->spi, &m);
 
 		*retlen = m.actual_length - m25p_cmdsz(flash);
+	}
+	#if 0
 	} else {
 		u32 i;
 
@@ -728,6 +790,9 @@ static int m25p80_write(struct mtd_info *mtd, loff_t to, size_t len,
 			*retlen += m.actual_length - m25p_cmdsz(flash);
 		}
 	}
+	#else
+	kfree(bbuf);
+	#endif
 
 	flash->wait_till_ready(flash);
 
@@ -1076,6 +1141,9 @@ static const struct spi_device_id m25p_ids[] = {
 	{ "mx25l25655e", INFO(0xc22619, 0, 64 * 1024, 512, 0) },
 	{ "mx66l51235l", INFO(0xc2201a, 0, 64 * 1024, 1024, 0) },
 
+	/* Cypress/Ramtron */
+	{ "fm25v05",     INFO(0x7F7F7F, 0x7F7F, 64 * 1024, 1, M25P_NO_ERASE) },
+
 	/* Micron */
 	{ "n25q064",  INFO(0x20ba17, 0, 64 * 1024, 128, 0) },
 	{ "n25q128a11",  INFO(0x20bb18, 0, 64 * 1024, 256, 0) },
@@ -1208,7 +1276,7 @@ static const struct spi_device_id *jedec_probe(struct spi_device *spi)
 	 * string for after vendor-specific data, after the three bytes
 	 * we use here.  Supporting some chips might require using it.
 	 */
-	tmp = spi_write_then_read(spi, &code, 1, id, 5);
+	tmp = spi_write_and_read(spi, &code, 1, id, 5);
 	if (tmp < 0) {
 		pr_debug("%s: error %d reading JEDEC ID\n",
 				dev_name(&spi->dev), tmp);
@@ -1221,6 +1289,8 @@ static const struct spi_device_id *jedec_probe(struct spi_device *spi)
 	jedec |= id[2];
 
 	ext_jedec = id[3] << 8 | id[4];
+	dev_info(&spi->dev, "JEDEC_ID: %.8X (%d) EXT_JEDEC_ID: %.8X (%d)\n",
+		jedec, jedec, ext_jedec, ext_jedec);
 
 	for (tmp = 0; tmp < ARRAY_SIZE(m25p_ids) - 1; tmp++) {
 		info = (void *)m25p_ids[tmp].driver_data;
