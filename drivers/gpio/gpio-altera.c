@@ -405,7 +405,7 @@ static int __init altera_gpio_init(void)
 {
 	return platform_driver_register(&altera_gpio_driver);
 }
-subsys_initcall(altera_gpio_init);
+late_initcall(altera_gpio_init);
 
 static void __exit altera_gpio_exit(void)
 {
