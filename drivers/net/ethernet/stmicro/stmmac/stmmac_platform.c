@@ -88,6 +88,7 @@ static int stmmac_probe_config_dt(struct platform_device *pdev,
 {
 	struct device_node *np = pdev->dev.of_node;
 	u32 phyaddr;
+	u32 phybus;
 
 	if (!np)
 		return -ENODEV;
@@ -153,6 +154,12 @@ static int stmmac_probe_config_dt(struct platform_device *pdev,
 				__func__, phyaddr);
 			return -EINVAL;
 		}
+	}
+
+	if (0 == of_property_read_u32(np, "phy-bus", &phybus) && phybus != -1) {
+		plat->phy_bus = phybus;
+	} else {
+		plat->phy_bus = plat->bus_id;
 	}
 
 	return 0;

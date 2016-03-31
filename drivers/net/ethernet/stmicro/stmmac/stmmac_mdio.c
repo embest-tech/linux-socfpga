@@ -23,7 +23,6 @@
   Author: Carl Shaw <carl.shaw@st.com>
   Maintainer: Giuseppe Cavallaro <peppe.cavallaro@st.com>
 *******************************************************************************/
-
 #include <linux/mii.h>
 #include <linux/phy.h>
 #include <linux/slab.h>

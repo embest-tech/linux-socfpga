@@ -96,6 +96,7 @@ struct plat_stmmacenet_data {
 	char *phy_bus_name;
 	int bus_id;
 	int phy_addr;
+	int phy_bus;
 	int interface;
 	struct stmmac_mdio_bus_data *mdio_bus_data;
 	struct stmmac_dma_cfg *dma_cfg;

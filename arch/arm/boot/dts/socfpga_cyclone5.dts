@@ -129,9 +129,17 @@
 	};
 };
 
+&gmac0 {
+	phy-mode = "rgmii";
+	phy-bus = <0x1>;
+	phy-addr = <0x6>;
+	status = "okay";
+};
+
 &gmac1 {
 	phy-mode = "rgmii";
-	snps,phy-addr = <0xffffffff>; /* probe for phy addr */
+	phy-bus = <0x1>;
+	phy-addr = <0x4>;	/* undefined phy-addr be auto probe addr */
 	status = "okay";
 };
 
