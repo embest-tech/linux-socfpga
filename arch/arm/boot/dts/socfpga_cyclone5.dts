@@ -158,6 +158,10 @@
 	};
 };
 
+&dcan1 {
+	status = "okay";
+};
+
 /{
 	soc {
 		leds {
