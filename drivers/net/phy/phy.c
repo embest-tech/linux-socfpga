@@ -838,6 +838,7 @@ void phy_state_machine(struct work_struct *work)
 			if (err)
 				break;
 
+			if (phydev->old_link != phydev->link) {
 			if (phydev->link) {
 				phydev->state = PHY_RUNNING;
 				netif_carrier_on(phydev->attached_dev);
@@ -847,6 +848,8 @@ void phy_state_machine(struct work_struct *work)
 			}
 
 			phydev->adjust_link(phydev->attached_dev);
+			}
+			phydev->old_link = phydev->link;
 
 			if (PHY_POLL != phydev->irq)
 				err = phy_config_interrupt(phydev,

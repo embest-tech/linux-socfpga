@@ -319,6 +319,7 @@ struct phy_device {
 
 	/* The most recently read link state */
 	int link;
+	int old_link;
 
 	/* Enabled Interrupts */
 	u32 interrupts;

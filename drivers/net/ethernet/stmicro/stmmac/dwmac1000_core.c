@@ -369,7 +369,10 @@ static void dwmac1000_set_eee_pls(struct mac_device_info *hw, int link)
 	else
 		value &= ~LPI_CTRL_STATUS_PLS;
 
-	writel(value, ioaddr + LPI_CTRL_STATUS);
+	/*
+	 * disable LPI_CTRL_STATUS writing
+	 * writel(value, ioaddr + LPI_CTRL_STATUS);
+	 */
 }
 
 static void dwmac1000_set_eee_timer(struct mac_device_info *hw, int ls, int tw)

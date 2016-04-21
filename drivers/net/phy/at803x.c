@@ -20,16 +20,23 @@
 #define AT803X_INTR_ENABLE			0x12
 #define AT803X_INTR_STATUS			0x13
 #define AT803X_WOL_ENABLE			0x01
-#define AT803X_DEVICE_ADDR			0x03
+
+
+#define AT803X_MMD_ACCESS_CONTROL		0x0D
+#define AT803X_MMD_ACCESS_CONTROL_DATA		0x0E
+#define AT803X_DEBUG_PORT_ADDRESS		0x1D
+#define AT803X_DEBUG_PORT_DATA			0x1E
+
+// MMD Access start
+#define AT803X_MMD3_ADDR			0x03
 #define AT803X_LOC_MAC_ADDR_0_15_OFFSET		0x804C
 #define AT803X_LOC_MAC_ADDR_16_31_OFFSET	0x804B
 #define AT803X_LOC_MAC_ADDR_32_47_OFFSET	0x804A
-#define AT803X_MMD_ACCESS_CONTROL		0x0D
-#define AT803X_MMD_ACCESS_CONTROL_DATA		0x0E
-#define AT803X_FUNC_DATA			0x4003
 
-#define AT803X_DEBUG_PORT_ADDRESS		0x1D
-#define AT803X_DEBUG_PORT_DATA			0x1E
+#define AT803X_MMD7_ADDR			0x07
+#define AT803X_MMD7_SELECT_CLK25M		0x8016
+// MMD Access end
+
 #define AT803X_DEBUG_TX_CLOCK_CONTROL		0x05
 
 // DEBUG_TX_CLOCK_CONTROL bits
@@ -59,14 +66,29 @@ static void at803x_set_wol_mac_addr(struct phy_device *phydev)
 
 	for (i = 0; i < 3; i++) {
 		phy_write(phydev, AT803X_MMD_ACCESS_CONTROL,
-				  AT803X_DEVICE_ADDR);
+				  AT803X_MMD3_ADDR);
 		phy_write(phydev, AT803X_MMD_ACCESS_CONTROL_DATA,
 				  offsets[i]);
 		phy_write(phydev, AT803X_MMD_ACCESS_CONTROL,
-				  AT803X_FUNC_DATA);
+				  AT803X_MMD3_ADDR | 0x4000UL);
 		phy_write(phydev, AT803X_MMD_ACCESS_CONTROL_DATA,
 				  mac[(i * 2) + 1] | (mac[(i * 2)] << 8));
 	}
+}
+
+static int at803x_read_mmd(struct phy_device *phydev, u8 DeviceAddress, u16 offset) {
+	phy_write(phydev, AT803X_MMD_ACCESS_CONTROL, DeviceAddress);
+	phy_write(phydev, AT803X_MMD_ACCESS_CONTROL_DATA, offset);
+	phy_write(phydev, AT803X_MMD_ACCESS_CONTROL, DeviceAddress | 0x4000UL);
+	return phy_read(phydev, AT803X_MMD_ACCESS_CONTROL_DATA);
+}
+
+static int at803x_write_mmd(struct phy_device *phydev, u8 DeviceAddress, u16 offset, u16 val) {
+	phy_write(phydev, AT803X_MMD_ACCESS_CONTROL, DeviceAddress);
+	phy_write(phydev, AT803X_MMD_ACCESS_CONTROL_DATA, offset);
+	phy_write(phydev, AT803X_MMD_ACCESS_CONTROL, DeviceAddress | 0x4000UL);
+	phy_write(phydev, AT803X_MMD_ACCESS_CONTROL_DATA, val);
+	return 0;
 }
 
 static int at803x_config_init(struct phy_device *phydev)
@@ -106,6 +128,20 @@ static int at803x_config_init(struct phy_device *phydev)
 
 	phydev->supported = features;
 	phydev->advertising = features;
+
+	/*
+	 * tary, 2016-04-18
+	 * select out pin CLK_25M output with 125M
+	 */
+	val = at803x_read_mmd(phydev, AT803X_MMD7_ADDR, AT803X_MMD7_SELECT_CLK25M);
+	val &= ~(0x3 << 3);
+	/*
+	 * 0x0 << 3	-- 25M
+	 * 0x1 << 3	-- 50M
+	 * 0x2 << 3	-- 62.5M
+	 * 0x3 << 3	-- 125M
+	 */
+	at803x_write_mmd(phydev, AT803X_MMD7_ADDR, AT803X_MMD7_SELECT_CLK25M, val | (0x3 << 3));
 
 	/* tary, 2016-03-02 */
 	phy_write(phydev, AT803X_DEBUG_PORT_ADDRESS, AT803X_DEBUG_TX_CLOCK_CONTROL);
