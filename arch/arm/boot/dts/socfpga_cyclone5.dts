@@ -279,7 +279,15 @@
 			#address-cells = < 2 >;
 			#size-cells = < 1 >;
 			ranges = <
-				0x00000001 0x00000160 0xFF200160 0x00000010
+				0x00000001 0x00000040 0xFF200040 0x00000020 
+				0x00000001 0x000000E0 0xFF2000E0 0x00000010 
+				0x00000001 0x00000138 0xFF200138 0x00000008 
+				0x00000001 0x00000200 0xFF200200 0x00000020 
+				0x00000001 0x00000220 0xFF200220 0x00000020 
+				0x00000001 0x00000020 0xFF200020 0x00000020 
+				0x00000001 0x000000D0 0xFF2000D0 0x00000010 
+				0x00000001 0x00000130 0xFF200130 0x00000008 
+				0x00000001 0x00000160 0xFF200160 0x00000010 
 				0x00000001 0x000000A0 0xFF2000A0 0x00000010 
 				0x00000001 0x00000170 0xFF200170 0x00000010 >; 
 
@@ -317,6 +325,40 @@
 				#gpio-cells = < 2 >;
 				gpio-controller;
 			}; //end gpio@0x100000170 (fpga_extend_io)
+
+			msgdma_fpgaddr2hps: msgdma@0x100000040 {
+				compatible = "msgdma-mm";
+				reg = < 0x00000001 0x00000040 0x00000020 
+					0x00000001 0x000000E0 0x00000010 
+					0x00000001 0x00000138 0x00000008 
+					>;
+				reg-names = "csr", "descriptor_slave", "response";
+				interrupt-parent = < &intc >;
+				interrupts = < 0 45 4 >;
+				for-read = < 1 >;
+			}; //end msgdma@0x100000040 (msgdma_fpgaddr2hps)
+
+			msgdma_adc2fpgaddr: msgdma@0x100000020 {
+				compatible = "msgdma-adc";
+				reg = < 0x00000001 0x00000020 0x00000020 
+					0x00000001 0x000000D0 0x00000010 
+					0x00000001 0x00000130 0x00000008
+					0x00000001 0x00000200 0x00000020 
+					0x00000001 0x00000220 0x00000020
+					>; 
+				reg-names = "csr", "descriptor_slave", "response", "adc0", "adc1";
+				interrupt-parent = < &intc >;
+				interrupts = < 0 46 4
+						0 47 4 
+						0 48 4
+						>;
+				fifo_words   = < 0x2000 0x2000 >;
+				fifomm_bases = < 0x00000000 0x40000000 >;
+				fifomm_sizes = < 0x40000000 0x40000000 >;
+				ddrdat_bases = < 0x0000000 0x8000000 >;
+				ddrdat_sizes = < 0x8000000 0x8000000 >;
+			}; //end msgdma@0x100000020 (msgdma_adc2fpgaddr)
+
 		}; //end bridge@0xc0000000 (hps_0_bridges)
 	};
 };
