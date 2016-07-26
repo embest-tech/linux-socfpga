@@ -145,6 +145,7 @@
 
 &spi0 {
 	status = "okay";
+	cs-gpios = <&gpio3 3 0>;
 
 	flash0: n25q00@0 {
 		compatible = "fm25v05";
@@ -294,9 +295,9 @@
 			gpio3: gpio@0x100000160 {
 				compatible = "ALTR,pio-14.1", "ALTR,pio-1.0", "altr,pio-1.0";
 				reg = < 0x00000001 0x00000160 0x00000010 >;
-				width = < 3 >;	/* width type NUMBER */
+				width = < 4 >;	/* width type NUMBER */
 				resetvalue = < 0 >;	/* embeddedsw.dts.params.resetvalue type NUMBER */
-				altr,gpio-bank-width = < 3 >;	/* embeddedsw.dts.params.altr,gpio-bank-width type NUMBER */
+				altr,gpio-bank-width = < 4 >;	/* embeddedsw.dts.params.altr,gpio-bank-width type NUMBER */
 				#gpio-cells = < 2 >;
 				gpio-controller;
 			}; //end gpio@0x100000160 (hps_led_use_fpga_pin)

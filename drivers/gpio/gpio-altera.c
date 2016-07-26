@@ -341,6 +341,9 @@ int altera_gpio_probe(struct platform_device *pdev)
 	irq_set_handler_data(altera_gc->mapped_irq, altera_gc);
 	irq_set_chained_handler(altera_gc->mapped_irq, altera_gpio_irq_handler);
 
+	dev_warn(&pdev->dev, "add gpio base %d ngpio %d\n",
+		altera_gc->mmchip.gc.base, altera_gc->mmchip.gc.ngpio);
+
 	return 0;
 
 teardown:
@@ -354,6 +357,9 @@ dispose_irq:
 
 	return ret;
 skip_irq:
+
+	dev_warn(&pdev->dev, "add gpio base %d ngpio %d\n",
+		altera_gc->mmchip.gc.base, altera_gc->mmchip.gc.ngpio);
 	return 0;
 }
 
@@ -405,7 +411,7 @@ static int __init altera_gpio_init(void)
 {
 	return platform_driver_register(&altera_gpio_driver);
 }
-late_initcall(altera_gpio_init);
+rootfs_initcall(altera_gpio_init);
 
 static void __exit altera_gpio_exit(void)
 {

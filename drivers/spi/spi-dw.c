@@ -320,8 +320,15 @@ static void giveback(struct dw_spi *dws)
 					struct spi_transfer,
 					transfer_list);
 
-	if (!last_transfer->cs_change && dws->cs_control)
+	if (!last_transfer->cs_change && dws->cs_control) {
 		dws->cs_control(MRST_SPI_DEASSERT);
+	}
+
+	if (dws->cur_dev && dws->cur_dev->cs_gpio != -ENOENT) {
+		gpio_set_value(dws->cur_dev->cs_gpio,
+			       dws->cur_dev->mode & SPI_CS_HIGH ? 0 : 1);
+	}
+	dws->cur_dev = NULL;
 
 	msg->state = NULL;
 	if (msg->complete)
@@ -469,6 +476,7 @@ static void pump_transfers(unsigned long data)
 	dws->n_bytes = chip->n_bytes;
 	dws->dma_width = chip->dma_width;
 	dws->cs_control = chip->cs_control;
+	dws->cur_dev = spi;
 
 	dws->rx_dma = transfer->rx_dma;
 	dws->tx_dma = transfer->tx_dma;
@@ -689,6 +697,7 @@ static int dw_spi_setup(struct spi_device *spi)
 {
 	struct dw_spi_chip *chip_info = NULL;
 	struct chip_data *chip;
+	int r;
 
 #ifdef CONFIG_OF
 	struct device_node *nc = spi->dev.of_node;
@@ -766,6 +775,14 @@ static int dw_spi_setup(struct spi_device *spi)
 			| (chip->type << SPI_FRF_OFFSET)
 			| (spi->mode  << SPI_MODE_OFFSET)
 			| (chip->tmode << SPI_TMOD_OFFSET);
+
+	if (spi->cs_gpio != -ENOENT) {
+		if ((r = gpio_request(spi->cs_gpio, "spi-dw"))) {
+			dev_err(&spi->dev, "Failed to request cs GPIO-%d\n", spi->cs_gpio);
+			return -EINVAL;
+		}
+		gpio_direction_output(spi->cs_gpio, spi->mode & SPI_CS_HIGH ? 0 : 1);
+	}
 
 	spi_set_ctldata(spi, chip);
 
