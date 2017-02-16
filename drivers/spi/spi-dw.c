@@ -777,7 +777,7 @@ static int dw_spi_setup(struct spi_device *spi)
 			| (chip->tmode << SPI_TMOD_OFFSET);
 
 	if (spi->cs_gpio != -ENOENT) {
-		if ((r = gpio_request(spi->cs_gpio, "spi-dw"))) {
+		if (0 && (r = gpio_request(spi->cs_gpio, "spi-dw"))) {
 			dev_err(&spi->dev, "Failed to request cs GPIO-%d\n", spi->cs_gpio);
 			return -EINVAL;
 		}

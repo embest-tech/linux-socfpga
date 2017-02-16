@@ -136,11 +136,24 @@
 
 &spi0 {
 	status = "okay";
-	cs-gpios = <&gpio3 3 0>;
+
+	spidev@0 {
+		compatible = "spidev";
+		reg = <0>;      /* chip select */
+		spi-max-frequency = <50000000>;
+		enable-dma = <1>;
+	};
 };
 
 &spi1 {
 	status = "okay";
+
+        spidev@0 {
+		compatible = "spidev";
+		reg = <0>;      /* chip select */
+		spi-max-frequency = <50000000>;
+		enable-dma = <1>;
+        };
 };
 
 &dcan1 {
