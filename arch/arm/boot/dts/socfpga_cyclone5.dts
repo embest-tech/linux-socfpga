@@ -55,7 +55,7 @@
 			altr,dw-mshc-sdr-timing = <0 3>;
 
 			slot@0 {
-				cd-gpios = <&gpio1 18 0>;
+				cd-gpios = <&gpio1 8 0>;
 				reg = <0>;
 				bus-width = <4>;
 			};
