@@ -16,6 +16,7 @@
 #include <linux/string.h>
 #include <linux/netdevice.h>
 #include <linux/etherdevice.h>
+#include <uapi/linux/mdio.h>
 
 #define AT803X_INTR_ENABLE			0x12
 #define AT803X_INTR_STATUS			0x13
@@ -151,6 +152,16 @@ static int at803x_config_init(struct phy_device *phydev)
 	at803x_set_wol_mac_addr(phydev);
 	status = phy_write(phydev, AT803X_INTR_ENABLE, AT803X_WOL_ENABLE);
 	status = phy_read(phydev, AT803X_INTR_STATUS);
+
+	/* disable EEE */
+	val = at803x_read_mmd(phydev, MDIO_MMD_PCS, MDIO_PCS_EEE_ABLE);
+	val &= ~(MDIO_AN_EEE_ADV_100TX | MDIO_AN_EEE_ADV_1000T);
+	at803x_write_mmd(phydev, MDIO_MMD_PCS, MDIO_PCS_EEE_ABLE, val);
+
+	/* disable EEE advertisement */
+	val = at803x_read_mmd(phydev, MDIO_MMD_AN, MDIO_AN_EEE_ADV);
+	val &= ~(MDIO_AN_EEE_ADV_100TX | MDIO_AN_EEE_ADV_1000T);
+	at803x_write_mmd(phydev, MDIO_MMD_AN, MDIO_AN_EEE_ADV, val);
 
 	return 0;
 }
