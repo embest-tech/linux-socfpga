@@ -239,21 +239,10 @@
 				0x00000001 0x00000020 0xFF200020 0x00000020 
 				0x00000001 0x000000D0 0xFF2000D0 0x00000010 
 				0x00000001 0x00000130 0xFF200130 0x00000008 
-				0x00000001 0x00000160 0xFF200160 0x00000010 
 				0x00000001 0x000000A0 0xFF2000A0 0x00000010 
 				0x00000001 0x00000170 0xFF200170 0x00000010 >; 
 
-			gpio3: gpio@0x100000160 {
-				compatible = "ALTR,pio-14.1", "ALTR,pio-1.0", "altr,pio-1.0";
-				reg = < 0x00000001 0x00000160 0x00000010 >;
-				width = < 4 >;	/* width type NUMBER */
-				resetvalue = < 0 >;	/* embeddedsw.dts.params.resetvalue type NUMBER */
-				altr,gpio-bank-width = < 4 >;	/* embeddedsw.dts.params.altr,gpio-bank-width type NUMBER */
-				#gpio-cells = < 2 >;
-				gpio-controller;
-			}; //end gpio@0x100000160 (hps_led_use_fpga_pin)
-
-			fpga_led: gpio@0x1000000A0 {
+			teds_io: gpio@0x1000000A0 {
 				compatible = "ALTR,pio-14.1", "ALTR,pio-1.0", "altr,pio-1.0";
 				reg = < 0x00000001 0x000000A0 0x00000010 >;
 				width = < 16 >;	/* width type NUMBER */
