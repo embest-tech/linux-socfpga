@@ -202,7 +202,7 @@ static void dwmac1000_dump_dma_regs(void __iomem *ioaddr)
 
 static unsigned int dwmac1000_get_hw_feature(void __iomem *ioaddr)
 {
-	return readl(ioaddr + DMA_HW_FEATURE);
+	return ~DMA_HW_FEAT_EEESEL & readl(ioaddr + DMA_HW_FEATURE);
 }
 
 static void dwmac1000_rx_watchdog(void __iomem *ioaddr, u32 riwt)
