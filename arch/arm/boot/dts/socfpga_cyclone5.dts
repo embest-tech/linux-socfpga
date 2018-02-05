@@ -136,6 +136,7 @@
 
 &spi0 {
 	status = "okay";
+	cs-gpios = <&fpga_extend_io 8 1>;
 
 	spidev@0 {
 		compatible = "spidev";
@@ -147,13 +148,14 @@
 
 &spi1 {
 	status = "okay";
+	cs-gpios = <&fpga_extend_io 9 1>;
 
-        spidev@0 {
+	spidev@0 {
 		compatible = "spidev";
 		reg = <0>;      /* chip select */
 		spi-max-frequency = <50000000>;
 		enable-dma = <1>;
-        };
+	};
 };
 
 &dcan1 {
@@ -164,11 +166,6 @@
 	soc {
 		leds {
 			compatible = "gpio-leds";
-
-			user_fpga_led0_c {
-				label = "user0";
-				gpios = <&fpga_extend_io 4 1>;
-			};
 
 			user_hps_led9_c {
 				label = "user1";
@@ -250,16 +247,16 @@
 				altr,gpio-bank-width = < 16 >;	/* embeddedsw.dts.params.altr,gpio-bank-width type NUMBER */
 				#gpio-cells = < 2 >;
 				gpio-controller;
-			}; //end gpio@0x1000000A0 (fpga_led)
+			}; //end gpio@0x1000000A0 (teds_io)
 
 			fpga_extend_io: gpio@0x100000170 {
 				compatible = "ALTR,pio-14.1", "ALTR,pio-1.0", "altr,pio-1.0";
 				reg = < 0x00000001 0x00000170 0x00000010 >;
 				interrupt-parent = < &intc >;
 				interrupts = < 0 49 1 >;
-				width = < 8 >;	/* width type NUMBER */
+				width = < 10 >;	/* width type NUMBER */
 				resetvalue = < 0 >;	/* embeddedsw.dts.params.resetvalue type NUMBER */
-				altr,gpio-bank-width = < 8 >;	/* embeddedsw.dts.params.altr,gpio-bank-width type NUMBER */
+				altr,gpio-bank-width = < 10 >;	/* embeddedsw.dts.params.altr,gpio-bank-width type NUMBER */
 				altr,interrupt_type = < 3 >;	/* embeddedsw.dts.params.altr,interrupt_type type NUMBER */
 				edge_type = < 2 >;	/* embeddedsw.dts.params.edge_type type NUMBER */
 				level_trigger = < 0 >;	/* embeddedsw.dts.params.level_trigger type NUMBER */
